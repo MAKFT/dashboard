@@ -1,0 +1,1038 @@
+<!-- Team Dashboard fuer WordPress -->
+<!-- Schritt 1: dashboard.js per WP-Filebase hochladen            -->
+<!-- Schritt 2: URL der JS-Datei unten bei src="..." eintragen    -->
+<!-- Schritt 3: Diesen Code in den WordPress Code-Editor einfuegen -->
+
+<style>
+
+  :root {
+    --bg:       #F5F3EE;
+    --surface:  #FFFFFF;
+    --border:   #E2DED6;
+    --border2:  #C8C3B8;
+    --text:     #1A1916;
+    --muted:    #7A7670;
+    --hint:     #B0ABA3;
+    --info-bg:  #EAF0FB;
+    --info-txt: #1A4FAD;
+    --vote-bg:  #EDE9FB;
+    --vote-txt: #3D2FAA;
+    --ok-bg:    #E6F4EC;
+    --ok-txt:   #1A6B3C;
+    --warn-bg:  #FDF3E3;
+    --warn-txt: #7A4B0A;
+    --red:      #C8372D;
+    --accent:   #1A1916;
+    --radius:   12px;
+    --radius-sm:8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--text); flex-shrink: 0;
+  }
+  .header-title {
+    font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .header-sub {
+    font-size: 12px; color: var(--muted); margin-top: 1px;
+    font-family: 'DM Mono', monospace;
+  }
+  .header-clock {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── Layout ──────────────────────────────────────── */
+  .main { max-width: 680px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .toolbar-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .btn-new {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--text); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    padding: 8px 14px; font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: opacity .15s;
+  }
+  .btn-new:hover { opacity: .85; }
+  .btn-new svg { flex-shrink: 0; }
+
+  /* ── Karten ──────────────────────────────────────── */
+  .karte {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color .15s;
+  }
+  .karte:hover { border-color: var(--border2); }
+
+  .karte-top {
+    display: flex; align-items: flex-start;
+    gap: 10px; padding: 14px 16px 10px;
+  }
+  .badge {
+    font-size: 10px; font-weight: 600; letter-spacing: .05em;
+    text-transform: uppercase; padding: 3px 8px;
+    border-radius: 20px; flex-shrink: 0; margin-top: 1px;
+  }
+  .badge-info  { background: var(--info-bg);  color: var(--info-txt); }
+  .badge-vote  { background: var(--vote-bg);  color: var(--vote-txt); }
+  .badge-samml { background: var(--ok-bg);    color: var(--ok-txt);   }
+
+  .karte-title {
+    font-size: 14px; font-weight: 600; flex: 1; line-height: 1.35;
+  }
+  .karte-meta {
+    padding: 0 16px 6px;
+    font-size: 11px; color: var(--hint);
+    font-family: 'DM Mono', monospace;
+    display: flex; gap: 12px;
+  }
+  .karte-body {
+    padding: 4px 16px 14px;
+    font-size: 13px; color: var(--muted);
+    line-height: 1.55;
+  }
+
+  /* ── Abstimmung ──────────────────────────────────── */
+  .vote-area { padding: 4px 16px 14px; }
+  .vote-opt {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px; cursor: pointer;
+  }
+  .vote-opt-label { font-size: 13px; flex: 1; }
+  .vote-track {
+    flex: 2; height: 6px;
+    background: var(--bg); border-radius: 3px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .vote-fill {
+    height: 100%; border-radius: 3px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .vote-pct {
+    font-size: 11px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    min-width: 32px; text-align: right;
+  }
+  .vote-footer {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-top: 6px;
+  }
+  .vote-total { font-size: 11px; color: var(--hint); font-family:'DM Mono',monospace; }
+  .voted-chip {
+    font-size: 11px; color: var(--ok-txt);
+    background: var(--ok-bg); padding: 2px 8px;
+    border-radius: 20px; font-weight: 500;
+  }
+  .btn-vote {
+    width: 100%; margin-top: 10px; padding: 8px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: transparent; font-size: 12px; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .15s;
+  }
+  .btn-vote:hover { background: var(--bg); border-color: var(--border2); }
+
+  /* ── Sammlung ────────────────────────────────────── */
+  .samml-area { padding: 4px 16px 14px; }
+  .samml-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .samml-row:last-of-type { border-bottom: none; }
+  .samml-label { font-size: 13px; font-weight: 500; flex: 1; }
+  .samml-namen {
+    font-size: 11px; color: var(--muted);
+    max-width: 180px; text-align: right; line-height: 1.4;
+  }
+  .samml-count {
+    font-size: 11px; font-family: 'DM Mono', monospace;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 1px 8px;
+    color: var(--muted); min-width: 24px; text-align: center;
+  }
+  .btn-mitmachen {
+    width: 100%; margin-top: 10px; padding: 8px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: transparent; font-size: 12px; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .15s;
+  }
+  .btn-mitmachen:hover { background: var(--bg); border-color: var(--border2); }
+  .btn-add-opt {
+    width: 100%; margin-top: 6px; padding: 6px;
+    border: 1px dashed var(--border2); border-radius: var(--radius-sm);
+    background: transparent; font-size: 11px; color: var(--hint);
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .15s;
+  }
+  .btn-add-opt:hover { background: var(--bg); color: var(--muted); }
+
+  /* ── Ablauf-Balken ───────────────────────────────── */
+  .expire-bar {
+    height: 2px; margin: 0 0 0; background: var(--border);
+  }
+  .expire-fill { height: 100%; transition: width .3s; }
+
+  /* ── Overlay / Modal ─────────────────────────────── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(20,18,14,.45); z-index: 100;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 20px; width: 100%; max-width: 420px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-title {
+    font-size: 15px; font-weight: 600;
+    margin-bottom: 14px; letter-spacing: -.01em;
+  }
+
+  /* Typ-Auswahl */
+  .typ-tabs {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 6px; margin-bottom: 14px;
+  }
+  .typ-tab {
+    padding: 8px 6px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: transparent;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    color: var(--muted); transition: all .15s;
+    font-family: 'DM Sans', sans-serif; text-align: center;
+    line-height: 1.3;
+  }
+  .typ-tab.on-info  { background: var(--info-bg);  color: var(--info-txt);  border-color: #99BBF0; }
+  .typ-tab.on-vote  { background: var(--vote-bg);  color: var(--vote-txt);  border-color: #B3A8EE; }
+  .typ-tab.on-samml { background: var(--ok-bg);    color: var(--ok-txt);    border-color: #85C9A0; }
+
+  /* Formular */
+  .fl { font-size: 11px; font-weight: 600; letter-spacing: .06em;
+        text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+  .fl:first-of-type { margin-top: 0; }
+  input[type=text], input[type=date], textarea, select {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg); color: var(--text);
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    transition: border-color .15s; outline: none;
+  }
+  input[type=text]:focus, input[type=date]:focus,
+  textarea:focus, select:focus { border-color: var(--border2); }
+  textarea { resize: none; line-height: 1.5; }
+
+  .opt-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .opt-row input { flex: 1; }
+  .rm-btn {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid var(--border); background: transparent;
+    cursor: pointer; color: var(--hint); font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .15s; font-family: 'DM Sans', sans-serif;
+  }
+  .rm-btn:hover { border-color: var(--border2); color: var(--red); }
+  .btn-add-more {
+    width: 100%; padding: 6px; margin-top: 2px;
+    border: 1px dashed var(--border2); border-radius: var(--radius-sm);
+    background: transparent; font-size: 11px; color: var(--hint);
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s;
+  }
+  .btn-add-more:hover { background: var(--bg); color: var(--muted); }
+
+  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-save {
+    flex: 1; padding: 9px; border-radius: var(--radius-sm);
+    background: var(--text); color: #fff; border: none;
+    font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: opacity .15s;
+  }
+  .btn-save:hover { opacity: .85; }
+  .btn-cancel {
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    background: transparent; border: 1px solid var(--border);
+    font-size: 13px; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .15s;
+  }
+  .btn-cancel:hover { background: var(--bg); }
+
+  /* Join-Modal Optionen */
+  .join-opt {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+  }
+  .join-opt:last-of-type { border-bottom: none; }
+  .join-opt-label { font-size: 13px; flex: 1; }
+  .join-names { font-size: 11px; color: var(--hint); max-width: 140px; text-align: right; }
+  .btn-ich {
+    padding: 4px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: transparent;
+    font-size: 12px; color: var(--text); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all .15s; white-space: nowrap;
+  }
+  .btn-ich:hover { background: var(--ok-bg); border-color: #85C9A0; color: var(--ok-txt); }
+
+  .hidden { display: none !important; }
+
+  /* Leerer Zustand */
+  .empty {
+    text-align: center; padding: 48px 20px;
+    color: var(--hint); font-size: 13px;
+  }
+  .empty-icon {
+    width: 40px; height: 40px; border: 1px dashed var(--border2);
+    border-radius: 50%; margin: 0 auto 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .karte { animation: fadeIn .2s ease both; }
+
+  /* ── Foto-Slideshow ──────────────────────────────── */
+  .slideshow-section {
+    background: var(--text);
+    padding: 0;
+    overflow: hidden;
+  }
+  .slideshow-wrap {
+    position: relative;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .slides-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    overflow: hidden;
+    background: #0D0C0A;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .8s ease;
+    overflow: hidden;
+  }
+  .slide.active { opacity: 1; }
+  .slide img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* Platzhalter wenn kein echtes Bild */
+  .slide-placeholder {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #1e1c18 0%, #2a2720 100%);
+    color: rgba(255,255,255,.18);
+    font-size: 13px; font-family: 'DM Mono', monospace;
+    user-select: none;
+  }
+  .slide-placeholder-icon {
+    width: 48px; height: 48px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .slide-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 28px 20px 14px;
+    background: linear-gradient(transparent, rgba(0,0,0,.72));
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .slide-caption {
+    color: rgba(255,255,255,.9);
+    font-size: 13px; font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    line-height: 1.35;
+    flex: 1;
+  }
+  .slide-caption-sub {
+    color: rgba(255,255,255,.55);
+    font-size: 11px; font-family: 'DM Mono', monospace;
+    margin-top: 2px;
+  }
+  .slide-controls {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    margin-left: 16px;
+  }
+  .slide-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2);
+    color: rgba(255,255,255,.9); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s; flex-shrink: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .slide-btn:hover { background: rgba(255,255,255,.28); }
+  .slide-dots {
+    display: flex; gap: 5px; align-items: center;
+  }
+  .slide-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,.3);
+    transition: background .3s, transform .3s;
+    cursor: pointer;
+  }
+  .slide-dot.active {
+    background: rgba(255,255,255,.9);
+    transform: scale(1.3);
+  }
+  .slideshow-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 20px;
+    background: rgba(255,255,255,.04);
+    border-top: 1px solid rgba(255,255,255,.07);
+    max-width: 680px; margin: 0 auto;
+  }
+  .slideshow-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: rgba(255,255,255,.35);
+  }
+  .slideshow-counter {
+    font-size: 11px; color: rgba(255,255,255,.3);
+    font-family: 'DM Mono', monospace;
+  }
+  .btn-upload {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,.2);
+    background: transparent; color: rgba(255,255,255,.6);
+    font-size: 11px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all .15s;
+  }
+  .btn-upload:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.9); }
+
+  /* ── Seiten-Navigation (Slideshow ↔ Brett) ───────── */
+  .nav-tabs {
+    display: flex; max-width: 680px; margin: 0 auto;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-tab {
+    flex: 1; padding: 12px;
+    font-size: 12px; font-weight: 600; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--hint);
+    border: none; background: transparent; cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s; font-family: 'DM Sans', sans-serif;
+  }
+  .nav-tab.active { color: var(--text); border-bottom-color: var(--text); }
+  .nav-tab:hover:not(.active) { color: var(--muted); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .tab-panel { animation: slideUp .2s ease both; }
+
+  /* Upload-Modal */
+  .upload-drop {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+    margin-bottom: 12px;
+  }
+  .upload-drop:hover, .upload-drop.drag-over {
+    border-color: var(--text);
+    background: var(--bg);
+  }
+  .upload-drop input { display: none; }
+  .upload-icon {
+    width: 40px; height: 40px;
+    border: 1px solid var(--border2); border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .upload-hint { font-size: 13px; color: var(--muted); }
+  .upload-hint-sub { font-size: 11px; color: var(--hint); margin-top: 4px; }
+  .foto-preview-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    margin-bottom: 12px;
+  }
+  .foto-preview {
+    aspect-ratio: 1; border-radius: var(--radius-sm);
+    overflow: hidden; position: relative;
+    border: 1px solid var(--border);
+  }
+  .foto-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .foto-preview .fp-del {
+    position: absolute; top: 4px; right: 4px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(0,0,0,.6); border: none; color: #fff;
+    font-size: 12px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s;
+  }
+  .foto-preview:hover .fp-del { opacity: 1; }
+
+</style>
+
+<div id="dashboard-root">
+<header class="header">
+  <div class="header-left">
+    <div class="header-dot"></div>
+    <div>
+      <div class="header-title">Team Dashboard</div>
+      <div class="header-sub">Euer digitales Brett</div>
+    </div>
+  </div>
+  <div class="header-clock">
+    <div id="clock-time">--:--</div>
+    <div id="clock-date" style="font-size:11px">–</div>
+    <div id="status-badge" style="font-size:10px;padding:1px 7px;border-radius:20px;margin-top:4px;font-weight:500;background:var(--bg);color:var(--hint);text-align:center">Lädt…</div>
+  </div>
+</header>
+
+<!-- ═══ Foto-Slideshow ══════════════════════════════════════════════ -->
+<div class="slideshow-section">
+  <div class="slideshow-wrap">
+    <div class="slides-container" id="slides-container">
+      <!-- Slides werden per JS eingefügt -->
+    </div>
+    <div class="slide-overlay">
+      <div>
+        <div class="slide-caption" id="slide-caption">Weihnachtsfeier 2024</div>
+        <div class="slide-caption-sub" id="slide-sub">Dezember 2024 · 14 Fotos</div>
+      </div>
+      <div class="slide-controls">
+        <button class="slide-btn" onclick="prevSlide()" title="Zurück">‹</button>
+        <div class="slide-dots" id="slide-dots"></div>
+        <button class="slide-btn" onclick="nextSlide()" title="Weiter">›</button>
+      </div>
+    </div>
+  </div>
+  <div class="slideshow-bar">
+    <span class="slideshow-label">Teamfotos</span>
+    <span class="slideshow-counter" id="slide-counter">1 / 4</span>
+    <button class="btn-upload" onclick="openUpload()">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+        <path d="M6 8V2M3 4.5L6 2l3 2.5M2 10h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Foto hinzufügen
+    </button>
+  </div>
+</div>
+
+<!-- ═══ Navigation Tabs ════════════════════════════════════════════ -->
+<div class="nav-tabs">
+  <button class="nav-tab active" id="tab-brett" onclick="showTab('brett')">Schwarzes Brett</button>
+  <button class="nav-tab"        id="tab-fotos" onclick="showTab('fotos')">Alle Fotos</button>
+</div>
+
+<main class="main">
+
+  <!-- Tab: Schwarzes Brett -->
+  <div id="panel-brett" class="tab-panel">
+    <div class="toolbar">
+      <span class="toolbar-label">Alle Einträge</span>
+      <button class="btn-new" onclick="openNeu()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 1v10M1 6h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Neuer Eintrag
+      </button>
+    </div>
+    <div id="liste"></div>
+  </div>
+
+  <!-- Tab: Alle Fotos -->
+  <div id="panel-fotos" class="tab-panel hidden">
+    <div class="toolbar">
+      <span class="toolbar-label">Teamfotos</span>
+      <button class="btn-new" onclick="openUpload()" style="background:var(--text)">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 8V2M3 4.5L6 2l3 2.5M2 10h8" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Foto hinzufügen
+      </button>
+    </div>
+    <div id="foto-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+  </div>
+
+</main>
+
+<!-- ═══ Modal: Neuer Eintrag ═══════════════════════════════════════ -->
+<div class="overlay" id="m-neu">
+  <div class="modal">
+    <div class="modal-title">Neuer Eintrag</div>
+    <div class="typ-tabs">
+      <button class="typ-tab on-info" id="tab-info"  onclick="setTyp('info')">Information</button>
+      <button class="typ-tab"         id="tab-vote"  onclick="setTyp('vote')">Abstimmung</button>
+      <button class="typ-tab"         id="tab-samml" onclick="setTyp('samml')">Sammlung</button>
+    </div>
+    <div class="fl">Titel</div>
+    <input type="text" id="f-title" placeholder="Worum geht es?">
+
+    <!-- Info -->
+    <div id="f-info">
+      <div class="fl">Text</div>
+      <textarea id="f-body" rows="3" placeholder="Beschreibe den Inhalt..."></textarea>
+    </div>
+
+    <!-- Abstimmung -->
+    <div id="f-vote" class="hidden">
+      <div class="fl">Frage / Erläuterung</div>
+      <textarea id="f-q" rows="2" placeholder="Zusätzliche Erläuterung (optional)"></textarea>
+      <div class="fl">Antwortoptionen</div>
+      <div id="vote-opts">
+        <div class="opt-row"><input type="text" value="Ja">  <button class="rm-btn" onclick="rmOpt(this,'vote-opts')">×</button></div>
+        <div class="opt-row"><input type="text" value="Nein"><button class="rm-btn" onclick="rmOpt(this,'vote-opts')">×</button></div>
+      </div>
+      <button class="btn-add-more" onclick="addOpt('vote-opts','Abstimmung')">+ Option hinzufügen</button>
+    </div>
+
+    <!-- Sammlung -->
+    <div id="f-samml" class="hidden">
+      <div class="fl">Beschreibung</div>
+      <textarea id="f-sbody" rows="2" placeholder="z.B. Freitag 18 Uhr – bitte eintragen was ihr mitbringt!"></textarea>
+      <div class="fl">Startkategorien</div>
+      <div id="samml-opts">
+        <div class="opt-row"><input type="text" placeholder="z.B. Getränke">  <button class="rm-btn" onclick="rmOpt(this,'samml-opts')">×</button></div>
+        <div class="opt-row"><input type="text" placeholder="z.B. Salat"><button class="rm-btn" onclick="rmOpt(this,'samml-opts')">×</button></div>
+      </div>
+      <button class="btn-add-more" onclick="addOpt('samml-opts','Kategorie')">+ Kategorie hinzufügen</button>
+    </div>
+
+    <div class="fl">Dein Name</div>
+    <input type="text" id="f-autor" placeholder="Vorname Nachname">
+    <div class="fl">Ablaufdatum (Notiz verschwindet danach)</div>
+    <input type="date" id="f-date">
+
+    <div class="modal-btns">
+      <button class="btn-save"   onclick="speichern()">Speichern</button>
+      <button class="btn-cancel" onclick="closeNeu()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: Eintragen (Sammlung) ════════════════════════════════ -->
+<div class="overlay" id="m-join">
+  <div class="modal">
+    <div class="modal-title" id="join-titel">Eintragen</div>
+    <div id="join-body"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeJoin()" style="flex:1">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: Neue Option vorschlagen ════════════════════════════ -->
+<div class="overlay" id="m-addopt">
+  <div class="modal">
+    <div class="modal-title">Neue Option vorschlagen</div>
+    <div class="fl">Bezeichnung</div>
+    <input type="text" id="ao-label" placeholder="z.B. Veggie-Burger">
+    <div class="fl">Dein Name (optional – direkt eintragen)</div>
+    <input type="text" id="ao-name" placeholder="Vorname">
+    <div class="modal-btns">
+      <button class="btn-save"   onclick="confirmAddOpt()">Hinzufügen</button>
+      <button class="btn-cancel" onclick="closeAddOpt()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: Abstimmen ════════════════════════════════════════════ -->
+<div class="overlay" id="m-vote">
+  <div class="modal">
+    <div class="modal-title" id="vote-titel">Abstimmen</div>
+    <div id="vote-body"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeVote()" style="flex:1">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: Foto hochladen ══════════════════════════════════════ -->
+<div class="overlay" id="m-upload">
+  <div class="modal">
+    <div class="modal-title">Fotos hinzufügen</div>
+    <div class="upload-drop" id="upload-drop" onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
+      <div class="upload-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 13V4M6 7l4-4 4 4M4 16h12" stroke="var(--muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="upload-hint">Klicken oder Dateien hier ablegen</div>
+      <div class="upload-hint-sub">JPG, PNG, WEBP · mehrere gleichzeitig möglich</div>
+    </div>
+    <div class="foto-preview-grid" id="upload-preview"></div>
+    <div class="fl">Beschriftung (gilt für alle ausgewählten Fotos)</div>
+    <input type="text" id="upload-caption" placeholder="z.B. Sommerfest 2025">
+    <div class="modal-btns">
+      <button class="btn-save" onclick="confirmUpload()">Speichern</button>
+      <button class="btn-cancel" onclick="closeUpload()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+
+
+let daten = [
+  {
+    id: 1, typ: 'info',
+    title: 'Parkplatz P3 diese Woche gesperrt',
+    body: 'Wegen Asphaltarbeiten bitte P1 oder P2 nutzen. Entschuldigung für die Umstände!',
+    autor: 'Markus L.', ablauf: offsetDate(5), farbe: '#1A4FAD'
+  },
+  {
+    id: 2, typ: 'vote',
+    title: 'Wo feiern wir die Abschlussfeier?',
+    frage: 'Bitte bis Freitag abstimmen!',
+    optionen: ['Restaurant Mitte', 'Dachterrasse Büro', 'Bootsfahrt Rhein'],
+    stimmen: [5, 8, 3], voted: false,
+    autor: 'Anna K.', ablauf: offsetDate(6), farbe: '#3D2FAA'
+  },
+  {
+    id: 3, typ: 'samml',
+    title: 'Grillabend – wer bringt was mit?',
+    body: 'Freitag 18 Uhr im Innenhof. Tragt euch bitte ein!',
+    optionen: [
+      { label: 'Fleisch',       namen: ['Markus L.', 'Thomas M.'] },
+      { label: 'Salat',         namen: ['Sandra B.'] },
+      { label: 'Brot & Beilagen', namen: [] },
+      { label: 'Getränke',      namen: ['Anna K.', 'Julia W.'] },
+    ],
+    autor: 'Thomas M.', ablauf: offsetDate(2), farbe: '#1A6B3C'
+  },
+  {
+    id: 4, typ: 'info',
+    title: 'Neue Kaffeemaschine im 2. OG',
+    body: 'Die neue Jura steht bereit. Anleitung liegt dabei – bitte nach der Nutzung Wasser auffüllen!',
+    autor: 'Sandra B.', ablauf: null, farbe: '#1A4FAD'
+  },
+];
+let nextId = 5;
+let aktTyp = 'info';
+let joinId = null, addOptId = null;
+
+function offsetDate(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+// ── Uhr ─────────────────────────────────────────────────────────
+function tickClock() {
+  const n = new Date();
+  const pad = x => String(x).padStart(2,'0');
+  document.getElementById('clock-time').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes());
+  const wt = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const mt = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  document.getElementById('clock-date').textContent =
+    wt[n.getDay()] + ', ' + n.getDate() + '. ' + mt[n.getMonth()];
+}
+tickClock(); setInterval(tickClock, 10000);
+
+// ── Rendern ──────────────────────────────────────────────────────
+function daysLeft(d) {
+  if (!d) return null;
+  return Math.ceil((new Date(d) - new Date()) / 86400000);
+}
+
+function renderListe() {
+  const el = document.getElementById('liste');
+  const sichtbar = daten.filter(e => { const dl = daysLeft(e.ablauf); return dl === null || dl >= 0; });
+
+  if (sichtbar.length === 0) {
+    el.innerHTML = `<div class="empty">
+      <div class="empty-icon">✦</div>
+      Noch keine Einträge vorhanden.<br>Erstelle den ersten mit "Neuer Eintrag".
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = '';
+  sichtbar.forEach((e, idx) => {
+    const dl = daysLeft(e.ablauf);
+    const card = document.createElement('div');
+    card.className = 'karte';
+    card.style.animationDelay = (idx * 40) + 'ms';
+
+    const badgeKlasse = e.typ === 'vote' ? 'badge-vote' : e.typ === 'samml' ? 'badge-samml' : 'badge-info';
+    const badgeText   = e.typ === 'vote' ? 'Abstimmung'  : e.typ === 'samml' ? 'Sammlung'    : 'Information';
+
+    let metaParts = [e.autor];
+    if (dl === null)    metaParts.push('Dauernd');
+    else if (dl === 0)  metaParts.push('Läuft heute ab');
+    else if (dl === 1)  metaParts.push('Noch 1 Tag');
+    else                metaParts.push(`Noch ${dl} Tage`);
+
+    let html = `
+      <div class="karte-top">
+        <span class="badge ${badgeKlasse}">${badgeText}</span>
+        <span class="karte-title">${e.title}</span>
+      </div>
+      <div class="karte-meta">${metaParts.map(p => `<span>${p}</span>`).join('')}</div>`;
+
+    if (e.typ === 'info') {
+      html += `<div class="karte-body">${e.body}</div>`;
+
+    } else if (e.typ === 'vote') {
+      if (e.frage) html += `<div class="karte-body" style="padding-bottom:4px">${e.frage}</div>`;
+      const total = e.stimmen.reduce((a,b)=>a+b,0);
+      html += `<div class="vote-area">`;
+      e.optionen.forEach((opt, i) => {
+        const pct = total > 0 ? Math.round(e.stimmen[i] / total * 100) : 0;
+        html += `<div class="vote-opt">
+          <span class="vote-opt-label">${opt}</span>
+          <div class="vote-track">
+            <div class="vote-fill" style="width:${e.voted ? pct : 0}%;background:${e.farbe}"></div>
+          </div>
+          <span class="vote-pct">${e.voted ? pct+'%' : ''}</span>
+        </div>`;
+      });
+      html += `<div class="vote-footer">
+        <span class="vote-total">${total} Stimme${total!==1?'n':''}</span>
+        ${e.voted ? '<span class="voted-chip">Abgestimmt</span>' : ''}
+      </div>`;
+      if (!e.voted) html += `<button class="btn-vote" onclick="openVote(${e.id})">Jetzt abstimmen</button>`;
+      html += `</div>`;
+
+    } else if (e.typ === 'samml') {
+      if (e.body) html += `<div class="karte-body" style="padding-bottom:4px">${e.body}</div>`;
+      html += `<div class="samml-area">`;
+      e.optionen.forEach(opt => {
+        html += `<div class="samml-row">
+          <span class="samml-label">${opt.label}</span>
+          <span class="samml-namen">${opt.namen.length ? opt.namen.join(', ') : '–'}</span>
+          <span class="samml-count">${opt.namen.length}</span>
+        </div>`;
+      });
+      html += `<button class="btn-mitmachen" onclick="openJoin(${e.id})">Eintragen</button>`;
+      html += `</div>`;
+    }
+
+    // Ablauf-Indikator
+    if (dl !== null) {
+      const maxDays = 14;
+      const pct = Math.min(100, Math.max(0, Math.round((1 - dl / maxDays) * 100)));
+      const farbe = dl <= 1 ? '#C8372D' : dl <= 3 ? '#B07020' : '#8AAA60';
+      html += `<div class="expire-bar"><div class="expire-fill" style="width:${pct}%;background:${farbe}"></div></div>`;
+    }
+
+    card.innerHTML = html;
+    el.appendChild(card);
+  });
+}
+
+// ── Modal: Neuer Eintrag ─────────────────────────────────────────
+function openNeu() {
+  ['f-title','f-body','f-autor','f-q','f-sbody'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('vote-opts').innerHTML = `
+    <div class="opt-row"><input type="text" value="Ja">  <button class="rm-btn" onclick="rmOpt(this,'vote-opts')">×</button></div>
+    <div class="opt-row"><input type="text" value="Nein"><button class="rm-btn" onclick="rmOpt(this,'vote-opts')">×</button></div>`;
+  document.getElementById('samml-opts').innerHTML = `
+    <div class="opt-row"><input type="text" placeholder="z.B. Getränke"><button class="rm-btn" onclick="rmOpt(this,'samml-opts')">×</button></div>
+    <div class="opt-row"><input type="text" placeholder="z.B. Salat">   <button class="rm-btn" onclick="rmOpt(this,'samml-opts')">×</button></div>`;
+  document.getElementById('f-date').value = offsetDate(7);
+  setTyp('info');
+  document.getElementById('m-neu').classList.add('open');
+}
+function closeNeu() { document.getElementById('m-neu').classList.remove('open'); }
+
+function setTyp(t) {
+  aktTyp = t;
+  ['info','vote','samml'].forEach(x => {
+    document.getElementById('tab-' + x).className = 'typ-tab' + (t === x ? ' on-' + x : '');
+    document.getElementById('f-' + x).classList.toggle('hidden', t !== x);
+  });
+}
+
+function addOpt(containerId, placeholder) {
+  const c = document.getElementById(containerId).children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'opt-row';
+  row.innerHTML = `<input type="text" placeholder="${placeholder} ${c}"><button class="rm-btn" onclick="rmOpt(this,'${containerId}')">×</button>`;
+  document.getElementById(containerId).appendChild(row);
+}
+function rmOpt(btn, containerId) {
+  if (document.getElementById(containerId).children.length > 1)
+    btn.parentElement.remove();
+}
+
+function speichern() {
+  const title  = document.getElementById('f-title').value.trim();
+  const autor  = document.getElementById('f-autor').value.trim() || 'Anonym';
+  const ablauf = document.getElementById('f-date').value || null;
+  if (!title) { document.getElementById('f-title').focus(); return; }
+
+  if (aktTyp === 'info') {
+    daten.unshift({ id: nextId++, typ: 'info', title, autor, ablauf, farbe: '#1A4FAD',
+      body: document.getElementById('f-body').value.trim() });
+
+  } else if (aktTyp === 'vote') {
+    const opts = [...document.querySelectorAll('#vote-opts input')]
+      .map(i => i.value.trim()).filter(Boolean);
+    if (opts.length < 2) return;
+    daten.unshift({ id: nextId++, typ: 'vote', title, autor, ablauf, farbe: '#3D2FAA',
+      frage: document.getElementById('f-q').value.trim(),
+      optionen: opts, stimmen: opts.map(() => 0), voted: false });
+
+  } else {
+    const body = document.getElementById('f-sbody').value.trim();
+    const opts = [...document.querySelectorAll('#samml-opts input')]
+      .map(i => i.value.trim()).filter(Boolean);
+    daten.unshift({ id: nextId++, typ: 'samml', title, autor, ablauf, farbe: '#1A6B3C',
+      body, optionen: opts.map(l => ({ label: l, namen: [] })) });
+  }
+  closeNeu();
+  renderListe();
+  speichereDaten(); // SharePoint-Sync (macht nichts im Demo-Modus)
+
+// ── Modal: Sammlung – Eintragen ─────────────────────────────────
+function openJoin(id) {
+  const e = daten.find(x => x.id === id);
+  if (!e) return;
+  joinId = id;
+  document.getElementById('join-titel').textContent = e.title;
+  renderJoinBody(id);
+  document.getElementById('m-join').classList.add('open');
+}
+function renderJoinBody(id) {
+  const e = daten.find(x => x.id === id);
+  let html = '';
+  e.optionen.forEach((opt, oi) => {
+    html += `<div class="join-opt">
+      <span class="join-opt-label">${opt.label}</span>
+      <span class="join-names">${opt.namen.length ? opt.namen.join(', ') : 'noch niemand'}</span>
+      <button class="btn-ich" onclick="quickJoin(${id},${oi})">+ Ich</button>
+    </div>`;
+  });
+  html += `<button class="btn-add-opt" onclick="openAddOpt(${id})" style="margin-top:10px">+ Neue Option vorschlagen</button>`;
+  document.getElementById('join-body').innerHTML = html;
+}
+function closeJoin() { document.getElementById('m-join').classList.remove('open'); joinId = null; }
+
+function quickJoin(id, oi) {
+  const name = prompt('Dein Name:', '');
+  if (!name || !name.trim()) return;
+  const e = daten.find(x => x.id === id);
+  if (e && !e.optionen[oi].namen.includes(name.trim())) {
+    e.optionen[oi].namen.push(name.trim());
+  }
+  renderJoinBody(id);
+  renderListe();
+}
+
+// ── Modal: Neue Option ───────────────────────────────────────────
+function openAddOpt(id) {
+  addOptId = id;
+  document.getElementById('ao-label').value = '';
+  document.getElementById('ao-name').value = '';
+  document.getElementById('m-join').classList.remove('open');
+  document.getElementById('m-addopt').classList.add('open');
+}
+function closeAddOpt() {
+  document.getElementById('m-addopt').classList.remove('open');
+  if (joinId) document.getElementById('m-join').classList.add('open');
+}
+function confirmAddOpt() {
+  const label = document.getElementById('ao-label').value.trim();
+  const name  = document.getElementById('ao-name').value.trim();
+  if (!label) return;
+  const e = daten.find(x => x.id === addOptId);
+  if (e) e.optionen.push({ label, namen: name ? [name] : [] });
+  closeAddOpt();
+  if (joinId) renderJoinBody(joinId);
+  renderListe();
+}
+
+// ── Modal: Abstimmen ─────────────────────────────────────────────
+function openVote(id) {
+  const e = daten.find(x => x.id === id);
+  if (!e || e.voted) return;
+  document.getElementById('vote-titel').textContent = e.title;
+  let html = `<p style="font-size:13px;color:var(--muted);margin-bottom:12px">${e.frage || 'Wähle eine Option:'}</p>`;
+  e.optionen.forEach((opt, i) => {
+    html += `<button onclick="castVote(${id},${i})" style="
+      display:block;width:100%;text-align:left;padding:10px 14px;
+      margin-bottom:8px;border:1px solid var(--border);
+      border-radius:var(--radius-sm);background:transparent;
+      font-size:13px;font-family:'DM Sans',sans-serif;
+      color:var(--text);cursor:pointer;transition:all .15s;"
+      onmouseover="this.style.background='var(--bg)';this.style.borderColor='var(--border2)'"
+      onmouseout="this.style.background='transparent';this.style.borderColor='var(--border)'"
+    >${opt}</button>`;
+  });
+  document.getElementById('vote-body').innerHTML = html;
+  document.getElementById('m-vote').classList.add('open');
+}
+function closeVote() { document.getElementById('m-vote').classList.remove('open'); }
+function castVote(id, i) {
+  const e = daten.find(x => x.id === id);
+  if (!e) return;
+  e.stimmen[i]++;
+  e.voted = true;
+  closeVote();
+  renderListe();
+}
+
+// ── Klick außerhalb schließt Modal ───────────────────────────────
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) { ov.classList.remove('open'); } });
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+renderListe();
+renderSlideshow();
+resetTimer();
+initApp();
+</script>
+</div>
+
+<script src="HIER_URL_ZUR_DASHBOARD_JS_DATEI_EINFUEGEN"></script>
