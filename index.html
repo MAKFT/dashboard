@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F3EE;--sur:#fff;--bdr:#E2DED6;--bdr2:#C8C3B8;--txt:#1A1916;--mut:#7A7670;--hnt:#B0ABA3;--ibg:#EAF0FB;--itx:#1A4FAD;--vbg:#EDE9FB;--vtx:#3D2FAA;--obg:#E6F4EC;--otx:#1A6B3C;--wbg:#FDF3E3;--wtx:#7A4B0A;--red:#C8372D;--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+.hdr{background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-dot{width:9px;height:9px;border-radius:50%;background:var(--txt)}
+.hdr-t{font-size:15px;font-weight:600}
+.hdr-s{font-size:11px;color:var(--mut);font-family:'DM Mono',monospace}
+.hdr-r{text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--mut)}
+.sbadge{font-size:10px;padding:1px 7px;border-radius:20px;margin-top:3px;font-weight:500;display:inline-block}
+.ss{background:var(--txt);color:#fff}
+.slide-sec{background:#111}
+.slide-wrap{max-width:680px;margin:0 auto;position:relative}
+.slide-box{position:relative;aspect-ratio:16/7;overflow:hidden;background:#0a0a0a}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .8s}
+.slide.on{opacity:1}
+.slide img{width:100%;height:100%;object-fit:cover}
+.slide-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.2);font-size:12px;font-family:'DM Mono',monospace}
+.slide-ph-ic{width:44px;height:44px;border:1px solid rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
+.slide-ov{position:absolute;bottom:0;left:0;right:0;padding:24px 16px 12px;background:linear-gradient(transparent,rgba(0,0,0,.7));display:flex;align-items:flex-end;justify-content:space-between}
+.slide-cap{color:rgba(255,255,255,.9);font-size:13px;font-weight:500;flex:1}
+.slide-sub{color:rgba(255,255,255,.5);font-size:11px;font-family:'DM Mono',monospace;margin-top:2px}
+.slide-ctrl{display:flex;align-items:center;gap:6px}
+.slide-btn{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.slide-btn:hover{background:rgba(255,255,255,.3)}
+.dots{display:flex;gap:4px}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s}
+.dot.on{background:#fff;transform:scale(1.3)}
+.slide-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.06);max-width:680px;margin:0 auto}
+.slide-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.slide-cnt{font-size:11px;color:rgba(255,255,255,.3);font-family:'DM Mono',monospace}
+.upbtn{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--rs);border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:11px;cursor:pointer}
+.upbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+.navtabs{display:flex;max-width:680px;margin:0 auto;background:var(--sur);border-bottom:1px solid var(--bdr)}
+.navtab{flex:1;padding:11px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--hnt);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:'DM Sans',sans-serif}
+.navtab.on{color:var(--txt);border-bottom-color:var(--txt)}
+.main{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tlbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.btn-new{display:flex;align-items:center;gap:6px;background:var(--txt);color:#fff;border:none;border-radius:var(--rs);padding:8px 14px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer}
+.btn-new:hover{opacity:.85}
+.karte{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:10px;overflow:hidden;animation:fi .2s ease both}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.karte:hover{border-color:var(--bdr2)}
+.ktop{display:flex;align-items:flex-start;gap:8px;padding:13px 14px 8px}
+.badge{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:20px;flex-shrink:0;margin-top:1px}
+.bi{background:var(--ibg);color:var(--itx)}
+.bv{background:var(--vbg);color:var(--vtx)}
+.bs{background:var(--obg);color:var(--otx)}
+.ktit{font-size:14px;font-weight:600;flex:1;line-height:1.3}
+.kmeta{padding:0 14px 5px;font-size:11px;color:var(--hnt);font-family:'DM Mono',monospace}
+.kbody{padding:3px 14px 13px;font-size:13px;color:var(--mut);line-height:1.55}
+.varea{padding:4px 14px 13px}
+.vopt{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.vlbl{font-size:13px;flex:1}
+.vtrack{flex:2;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--bdr)}
+.vfill{height:100%;border-radius:3px;transition:width .5s}
+.vpct{font-size:11px;color:var(--mut);font-family:'DM Mono',monospace;min-width:30px;text-align:right}
+.vfoot{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
+.vtot{font-size:11px;color:var(--hnt);font-family:'DM Mono',monospace}
+.vchip{font-size:11px;color:var(--otx);background:var(--obg);padding:2px 8px;border-radius:20px;font-weight:500}
+.gbtn{width:100%;margin-top:9px;padding:7px;border:1px solid var(--bdr);border-radius:var(--rs);background:transparent;font-size:12px;color:var(--mut);cursor:pointer;font-family:'DM Sans',sans-serif}
+.gbtn:hover{background:var(--bg);border-color:var(--bdr2)}
+.sarea{padding:4px 14px 13px}
+.srow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr)}
+.srow:last-of-type{border-bottom:none}
+.slbl{font-size:13px;font-weight:500;flex:1}
+.snamen{font-size:11px;color:var(--mut);max-width:180px;text-align:right;line-height:1.4}
+.scnt{font-size:11px;font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--bdr);border-radius:20px;padding:1px 8px;color:var(--mut);min-width:22px;text-align:center}
+.xbar{height:2px;margin:0;background:var(--bdr)}
+.xfill{height:100%;border-radius:2px}
+.empty{text-align:center;padding:48px 20px;color:var(--hnt);font-size:13px}
+.empty-ic{width:38px;height:38px;border:1px dashed var(--bdr2);border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.ov{display:none;position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:100;align-items:center;justify-content:center;padding:16px}
+.ov.on{display:flex}
+.modal{background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);padding:18px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+.mtit{font-size:15px;font-weight:600;margin-bottom:12px}
+.ttabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px}
+.ttab{padding:7px 4px;border-radius:var(--rs);border:1px solid var(--bdr);background:transparent;font-size:11px;font-weight:500;cursor:pointer;color:var(--mut);transition:all .15s;font-family:'DM Sans',sans-serif}
+.ttab.ti{background:var(--ibg);color:var(--itx);border-color:#99BBF0}
+.ttab.tv{background:var(--vbg);color:var(--vtx);border-color:#B3A8EE}
+.ttab.ts{background:var(--obg);color:var(--otx);border-color:#85C9A0}
+.fl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:9px 0 3px}
+input[type=text],input[type=date],textarea{width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:var(--rs);background:var(--bg);color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+input[type=text]:focus,input[type=date]:focus,textarea:focus{border-color:var(--bdr2)}
+textarea{resize:none;line-height:1.5}
+.orow{display:flex;gap:5px;margin-bottom:5px;align-items:center}
+.orow input{flex:1}
+.rmbtn{width:24px;height:24px;border-radius:50%;border:1px solid var(--bdr);background:transparent;cursor:pointer;color:var(--hnt);font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Sans',sans-serif}
+.rmbtn:hover{color:var(--red);border-color:var(--red)}
+.addopt{width:100%;padding:5px;border:1px dashed var(--bdr2);border-radius:var(--rs);background:transparent;font-size:11px;color:var(--hnt);cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:2px}
+.addopt:hover{background:var(--bg)}
+.mbtns{display:flex;gap:8px;margin-top:14px}
+.bsave{flex:1;padding:9px;border-radius:var(--rs);background:var(--txt);color:#fff;border:none;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer}
+.bsave:hover{opacity:.85}
+.bcanc{padding:9px 14px;border-radius:var(--rs);background:transparent;border:1px solid var(--bdr);font-size:13px;color:var(--mut);font-family:'DM Sans',sans-serif;cursor:pointer}
+.bcanc:hover{background:var(--bg)}
+.jopt{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.jopt:last-of-type{border-bottom:none}
+.jolbl{font-size:13px;flex:1}
+.jonam{font-size:11px;color:var(--hnt);max-width:130px;text-align:right}
+.jibtn{padding:4px 11px;border-radius:var(--rs);border:1px solid var(--bdr);background:transparent;font-size:12px;color:var(--txt);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.jibtn:hover{background:var(--obg);border-color:#85C9A0;color:var(--otx)}
+.daopt{width:100%;margin-top:8px;padding:5px;border:1px dashed var(--bdr2);border-radius:var(--rs);background:transparent;font-size:11px;color:var(--hnt);cursor:pointer;font-family:'DM Sans',sans-serif}
+.daopt:hover{background:var(--bg)}
+.udrop{border:2px dashed var(--bdr2);border-radius:var(--r);padding:24px 16px;text-align:center;cursor:pointer;margin-bottom:10px}
+.udrop:hover{border-color:var(--txt);background:var(--bg)}
+.udrop input{display:none}
+.upic{width:38px;height:38px;border:1px solid var(--bdr2);border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.uhint{font-size:13px;color:var(--mut)}
+.uhint2{font-size:11px;color:var(--hnt);margin-top:3px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.pitem{aspect-ratio:1;border-radius:var(--rs);overflow:hidden;position:relative;border:1px solid var(--bdr)}
+.pitem img{width:100%;height:100%;object-fit:cover}
+.pdel{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.pitem:hover .pdel{opacity:1}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fitem{border-radius:var(--rs);overflow:hidden;aspect-ratio:1;position:relative;border:1px solid var(--bdr);cursor:pointer;background:#1a1916}
+.fitem img{width:100%;height:100%;object-fit:cover;display:block}
+.fcap{position:absolute;bottom:0;left:0;right:0;padding:12px 6px 5px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:rgba(255,255,255,.8);font-size:10px;font-family:'DM Mono',monospace}
+.fdel{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:12px;cursor:pointer;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center}
+.fitem:hover .fdel{opacity:1}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-dot"></div>
+    <div>
+      <div class="hdr-t">Team Dashboard</div>
+      <div class="hdr-s">Euer digitales Brett</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div id="clk">--:--</div>
+    <div id="dat" style="font-size:10px">-</div>
+    <div id="sbadge" class="sbadge ss">Lädt...</div>
+  </div>
+</header>
+
+<div class="slide-sec">
+  <div class="slide-wrap">
+    <div class="slide-box" id="sbox"></div>
+    <div class="slide-ov">
+      <div>
+        <div class="slide-cap" id="scap">-</div>
+        <div class="slide-sub" id="ssub">-</div>
+      </div>
+      <div class="slide-ctrl">
+        <button class="slide-btn" onclick="prevSlide()">&#8249;</button>
+        <div class="dots" id="sdots"></div>
+        <button class="slide-btn" onclick="nextSlide()">&#8250;</button>
+      </div>
+    </div>
+  </div>
+  <div class="slide-bar">
+    <span class="slide-lbl">Teamfotos</span>
+    <span class="slide-cnt" id="scnt">1/1</span>
+    <button class="upbtn" onclick="ladeFotos()" title="Neu laden">&#8635; Aktualisieren</button>
+    <a class="upbtn" href="https://drive.google.com/drive/folders/18tT0XQF98ZxTOWajwr6ChFK3aonKyrmz" target="_blank" style="text-decoration:none">+ Foto</a>
+  </div>
+</div>
+
+<div class="navtabs">
+  <button class="navtab on" id="nt-brett" onclick="showTab('brett')">Schwarzes Brett</button>
+  <button class="navtab" id="nt-fotos" onclick="showTab('fotos')">Alle Fotos</button>
+</div>
+
+<!-- Instagram Strip -->
+<div style="background:var(--sur);border-bottom:1px solid var(--bdr);max-width:680px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 6px">
+    <span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Instagram</span>
+    <a href="https://www.instagram.com/mak_apothekenmarketing" target="_blank" style="font-size:11px;color:var(--mut);text-decoration:none">@mak_apothekenmarketing &#8599;</a>
+  </div>
+  <div style="padding:0 16px 12px">
+    <behold-widget feed-id="z3nG3vqu2VVHPyTLtJWH"></behold-widget>
+    <script>
+      (() => {
+        const d=document,s=d.createElement("script");s.type="module";
+        s.src="https://w.behold.so/widget.js";d.head.append(s);
+      })();
+    </script>
+  </div>
+</div>
+
+<div class="main">
+  <div id="panel-brett">
+    <div class="toolbar">
+      <span class="tlbl">Alle Eintraege</span>
+      <button class="btn-new" onclick="openNeu()">+ Neuer Eintrag</button>
+    </div>
+    <div id="liste"></div>
+  </div>
+  <div id="panel-fotos" class="hidden">
+    <div class="toolbar">
+      <span class="tlbl">Teamfotos</span>
+      <button class="btn-new" onclick="openUpload()">+ Foto hinzufuegen</button>
+    </div>
+    <div class="fgrid" id="fgrid"></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-neu">
+  <div class="modal">
+    <div class="mtit">Neuer Eintrag</div>
+    <div class="ttabs">
+      <button class="ttab ti" id="tt-info" onclick="setTyp('info')">Information</button>
+      <button class="ttab" id="tt-vote" onclick="setTyp('vote')">Abstimmung</button>
+      <button class="ttab" id="tt-samml" onclick="setTyp('samml')">Sammlung</button>
+    </div>
+    <div class="fl">Titel</div>
+    <input type="text" id="f-title" placeholder="Worum geht es?">
+    <div id="f-info">
+      <div class="fl">Text</div>
+      <textarea id="f-body" rows="3" placeholder="Details..."></textarea>
+    </div>
+    <div id="f-vote" class="hidden">
+      <div class="fl">Frage</div>
+      <textarea id="f-q" rows="2" placeholder="Erlaeuterung (optional)" style="height:44px"></textarea>
+      <div class="fl">Optionen</div>
+      <div id="vopts">
+        <div class="orow"><input type="text" value="Ja"><button class="rmbtn" onclick="rmOpt(this,'vopts')">x</button></div>
+        <div class="orow"><input type="text" value="Nein"><button class="rmbtn" onclick="rmOpt(this,'vopts')">x</button></div>
+      </div>
+      <button class="addopt" onclick="addOpt('vopts')">+ Option</button>
+    </div>
+    <div id="f-samml" class="hidden">
+      <div class="fl">Beschreibung</div>
+      <textarea id="f-sbody" rows="2" placeholder="Was wird gesammelt?" style="height:44px"></textarea>
+      <div class="fl">Kategorien</div>
+      <div id="sopts">
+        <div class="orow"><input type="text" placeholder="z.B. Getraenke"><button class="rmbtn" onclick="rmOpt(this,'sopts')">x</button></div>
+        <div class="orow"><input type="text" placeholder="z.B. Salat"><button class="rmbtn" onclick="rmOpt(this,'sopts')">x</button></div>
+      </div>
+      <button class="addopt" onclick="addOpt('sopts')">+ Kategorie</button>
+    </div>
+    <div class="fl">Dein Name</div>
+    <input type="text" id="f-autor" placeholder="Vorname Nachname">
+    <div class="fl">Ablaufdatum</div>
+    <input type="date" id="f-date">
+    <div class="mbtns">
+      <button class="bsave" onclick="speichern()">Speichern</button>
+      <button class="bcanc" onclick="closeNeu()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ov-join">
+  <div class="modal">
+    <div class="mtit" id="jtit">Eintragen</div>
+    <div id="jbody"></div>
+    <div class="mbtns"><button class="bcanc" onclick="closeJoin()" style="flex:1">Schliessen</button></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-addopt">
+  <div class="modal">
+    <div class="mtit">Neue Option</div>
+    <div class="fl">Bezeichnung</div>
+    <input type="text" id="ao-lbl" placeholder="z.B. Veggie-Burger">
+    <div class="fl">Dein Name (optional)</div>
+    <input type="text" id="ao-nam" placeholder="Vorname">
+    <div class="mbtns">
+      <button class="bsave" onclick="confirmAddOpt()">Hinzufuegen</button>
+      <button class="bcanc" onclick="closeAddOpt()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ov-vote">
+  <div class="modal">
+    <div class="mtit" id="vtit">Abstimmen</div>
+    <div id="vbody"></div>
+    <div class="mbtns"><button class="bcanc" onclick="closeVote()" style="flex:1">Abbrechen</button></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-upload">
+  <div class="modal">
+    <div class="mtit">Fotos hinzufuegen</div>
+    <div class="udrop" id="udrop" onclick="document.getElementById('ufile').click()" ondragover="event.preventDefault();this.style.borderColor='#1A1916'" ondragleave="this.style.borderColor=''" ondrop="handleDrop(event)">
+      <input type="file" id="ufile" accept="image/*" multiple onchange="handleFiles(this.files)">
+      <div class="upic">+</div>
+      <div class="uhint">Klicken oder Dateien hierher ziehen</div>
+      <div class="uhint2">JPG, PNG, WEBP</div>
+    </div>
+    <div class="pgrid" id="uprev"></div>
+    <div class="fl">Beschriftung</div>
+    <input type="text" id="ucap" placeholder="z.B. Sommerfest 2025">
+    <div class="mbtns">
+      <button class="bsave" id="ubtn" onclick="confirmUpload()">Speichern</button>
+      <button class="bcanc" onclick="closeUpload()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var JSONBIN_ID = '69bd315fb7ec241ddc872a2c';
+var JSONBIN_KEY = '$2a$10$xoDsdmh9XeHivjSYE7kBF.t9HwHU4moDeZ4B3B/tqHtT/OOTo.NY2';
+var JSONBIN_OK = JSONBIN_ID.indexOf('XXX') === -1;
+
+var daten = [];
+var nextId = 10;
+var aktTyp = 'info';
+var joinId = null;
+var addOptId = null;
+var GDRIVE_FOLDER = '18tT0XQF98ZxTOWajwr6ChFK3aonKyrmz';
+var GDRIVE_KEY = 'AIzaSyBoIMY7BFYwAg3aoldKHBC1yPSVEu9mn6c';
+
+var fotos = [];
+var si = 0;
+var stimer = null;
+var uqueue = [];
+
+async function ladeFotos() {
+  try {
+    var url = 'https://www.googleapis.com/drive/v3/files'
+      + '?q=%27' + GDRIVE_FOLDER + '%27+in+parents+and+mimeType+contains+%27image/%27+and+trashed=false'
+      + '&orderBy=createdTime+desc'
+      + '&fields=files(id,name,createdTime)'
+      + '&pageSize=50'
+      + '&key=' + GDRIVE_KEY;
+    var r = await fetch(url);
+    if (!r.ok) throw new Error(r.status);
+    var data = await r.json();
+    if (data.files && data.files.length > 0) {
+      fotos = data.files.map(function(f) {
+        var d = new Date(f.createdTime);
+        var sub = d.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+        return {
+          src: 'https://drive.google.com/thumbnail?id=' + f.id + '&sz=w1200',
+          cap: f.name.replace(/\.[^/.]+$/, ''),
+          sub: sub,
+          bg: '#1a1916'
+        };
+      });
+    } else {
+      fotos = [{src:null, cap:'Noch keine Fotos im Drive-Ordner', sub:'Bilder in den geteilten Ordner laden', bg:'#1a1916'}];
+    }
+  } catch(e) {
+    console.error('Google Drive Fotos:', e);
+    fotos = [{src:null, cap:'Fotos konnten nicht geladen werden', sub:'Ordner oeffentlich teilen?', bg:'#1a1916'}];
+  }
+  renderSlide();
+  renderFgrid();
+  if (fotos.length > 1) {
+    if (stimer) clearInterval(stimer);
+    stimer = setInterval(function(){goSlide(si+1);}, 6000);
+  }
+}
+
+function setBadge(txt, col) {
+  var b = document.getElementById('sbadge');
+  if (!b) return;
+  b.textContent = txt;
+  b.style.background = col === 'green' ? '#1A6B3C' : col === 'amber' ? '#854F0B' : '#444';
+  b.style.color = '#fff';
+}
+
+function clock() {
+  var n = new Date();
+  var pad = function(x) { return String(x).padStart(2,'0'); };
+  document.getElementById('clk').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes());
+  var days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  var months = ['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  document.getElementById('dat').textContent = days[n.getDay()] + ' ' + n.getDate() + '. ' + months[n.getMonth()];
+}
+clock();
+setInterval(clock, 10000);
+
+function daysLeft(d) {
+  if (!d) return null;
+  return Math.ceil((new Date(d) - new Date()) / 86400000);
+}
+
+function offsetDate(days) {
+  var d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+async function ladeDaten() {
+  if (!JSONBIN_OK) { setBadge('Demo', 'gray'); renderListe(); return; }
+  try {
+    var r = await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_ID + '/latest', {
+      headers: {'X-Master-Key': JSONBIN_KEY}
+    });
+    if (!r.ok) throw new Error(r.status);
+    var j = await r.json();
+    if (Array.isArray(j.record) && j.record.length > 0) {
+      daten = j.record;
+      nextId = Math.max.apply(null, daten.map(function(e) { return e.id || 0; })) + 1;
+    }
+    setBadge('Verbunden', 'green');
+  } catch(e) {
+    console.error('JSONBin laden:', e);
+    setBadge('Offline', 'amber');
+  }
+  renderListe();
+}
+
+async function save() {
+  if (!JSONBIN_OK) return;
+  try {
+    await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_ID, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json','X-Master-Key': JSONBIN_KEY},
+      body: JSON.stringify(daten)
+    });
+  } catch(e) { console.error('JSONBin save:', e); }
+}
+
+function renderListe() {
+  var el = document.getElementById('liste');
+  var vis = daten.filter(function(e) {
+    var dl = daysLeft(e.ablauf);
+    return dl === null || dl >= 0;
+  });
+  if (vis.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-ic">+</div>Noch keine Eintraege.<br>Erstelle den ersten mit "+ Neuer Eintrag".</div>';
+    return;
+  }
+  el.innerHTML = '';
+  vis.forEach(function(e, idx) {
+    var dl = daysLeft(e.ablauf);
+    var div = document.createElement('div');
+    div.className = 'karte';
+    div.style.animationDelay = (idx * 40) + 'ms';
+    var bc = e.typ === 'vote' ? 'bv' : e.typ === 'samml' ? 'bs' : 'bi';
+    var bl = e.typ === 'vote' ? 'Abstimmung' : e.typ === 'samml' ? 'Sammlung' : 'Information';
+    var meta = e.autor + (dl === null ? ' - Dauerhaft' : dl === 0 ? ' - Heute' : ' - Noch ' + dl + ' Tage');
+    var h = '<div class="ktop"><span class="badge ' + bc + '">' + bl + '</span><span class="ktit">' + e.title + '</span></div>';
+    h += '<div class="kmeta">' + meta + '</div>';
+    if (e.typ === 'info') {
+      h += '<div class="kbody">' + (e.body || '') + '</div>';
+    } else if (e.typ === 'vote') {
+      if (e.frage) h += '<div class="kbody" style="padding-bottom:3px">' + e.frage + '</div>';
+      var tot = e.stimmen.reduce(function(a,b){return a+b;},0);
+      h += '<div class="varea">';
+      e.optionen.forEach(function(opt, i) {
+        var pct = tot > 0 ? Math.round(e.stimmen[i]/tot*100) : 0;
+        h += '<div class="vopt"><span class="vlbl">' + opt + '</span>';
+        h += '<div class="vtrack"><div class="vfill" style="width:' + (e.voted?pct:0) + '%;background:#3D2FAA"></div></div>';
+        h += '<span class="vpct">' + (e.voted ? pct + '%' : '') + '</span></div>';
+      });
+      h += '<div class="vfoot"><span class="vtot">' + tot + ' Stimmen</span>';
+      if (e.voted) h += '<span class="vchip">Abgestimmt</span>';
+      h += '</div>';
+      if (!e.voted) h += '<button class="gbtn" onclick="openVote(' + e.id + ')">Jetzt abstimmen</button>';
+      h += '</div>';
+    } else if (e.typ === 'samml') {
+      if (e.body) h += '<div class="kbody" style="padding-bottom:3px">' + e.body + '</div>';
+      h += '<div class="sarea">';
+      e.optionen.forEach(function(opt) {
+        h += '<div class="srow"><span class="slbl">' + opt.label + '</span>';
+        h += '<span class="snamen">' + (opt.namen.length ? opt.namen.join(', ') : '-') + '</span>';
+        h += '<span class="scnt">' + opt.namen.length + '</span></div>';
+      });
+      h += '<button class="gbtn" onclick="openJoin(' + e.id + ')">Eintragen</button>';
+      h += '</div>';
+    }
+    if (dl !== null) {
+      var pct2 = Math.min(100, Math.max(0, Math.round((1 - dl/14)*100)));
+      var fc = dl <= 1 ? '#C8372D' : dl <= 3 ? '#B07020' : '#639922';
+      h += '<div class="xbar"><div class="xfill" style="width:' + pct2 + '%;background:' + fc + '"></div></div>';
+    }
+    div.innerHTML = h;
+    el.appendChild(div);
+  });
+}
+
+function openNeu() {
+  ['f-title','f-body','f-autor','f-q','f-sbody'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('vopts').innerHTML = '<div class="orow"><input type="text" value="Ja"><button class="rmbtn" onclick="rmOpt(this,\'vopts\')">x</button></div><div class="orow"><input type="text" value="Nein"><button class="rmbtn" onclick="rmOpt(this,\'vopts\')">x</button></div>';
+  document.getElementById('sopts').innerHTML = '<div class="orow"><input type="text" placeholder="z.B. Getraenke"><button class="rmbtn" onclick="rmOpt(this,\'sopts\')">x</button></div><div class="orow"><input type="text" placeholder="z.B. Salat"><button class="rmbtn" onclick="rmOpt(this,\'sopts\')">x</button></div>';
+  document.getElementById('f-date').value = offsetDate(7);
+  setTyp('info');
+  document.getElementById('ov-neu').classList.add('on');
+}
+function closeNeu() { document.getElementById('ov-neu').classList.remove('on'); }
+
+function setTyp(t) {
+  aktTyp = t;
+  ['info','vote','samml'].forEach(function(x) {
+    document.getElementById('tt-'+x).className = 'ttab' + (t===x ? ' t'+x[0] : '');
+    document.getElementById('f-'+x).classList.toggle('hidden', t!==x);
+  });
+  document.getElementById('tt-info').className = 'ttab' + (t==='info' ? ' ti' : '');
+  document.getElementById('tt-vote').className = 'ttab' + (t==='vote' ? ' tv' : '');
+  document.getElementById('tt-samml').className = 'ttab' + (t==='samml' ? ' ts' : '');
+}
+
+function addOpt(cid) {
+  var c = document.getElementById(cid).children.length + 1;
+  var row = document.createElement('div');
+  row.className = 'orow';
+  row.innerHTML = '<input type="text" placeholder="Option ' + c + '"><button class="rmbtn" onclick="rmOpt(this,\'' + cid + '\')">x</button>';
+  document.getElementById(cid).appendChild(row);
+}
+function rmOpt(btn, cid) {
+  if (document.getElementById(cid).children.length > 1) btn.parentElement.remove();
+}
+
+function speichern() {
+  var title = document.getElementById('f-title').value.trim();
+  var autor = document.getElementById('f-autor').value.trim() || 'Anonym';
+  var ablauf = document.getElementById('f-date').value || null;
+  if (!title) return;
+  var entry = {id: nextId++, typ: aktTyp, title: title, autor: autor, ablauf: ablauf};
+  if (aktTyp === 'info') {
+    entry.body = document.getElementById('f-body').value.trim();
+    entry.farbe = '#1A4FAD';
+  } else if (aktTyp === 'vote') {
+    var opts = Array.from(document.querySelectorAll('#vopts input')).map(function(i){return i.value.trim();}).filter(Boolean);
+    if (opts.length < 2) return;
+    entry.frage = document.getElementById('f-q').value.trim();
+    entry.optionen = opts;
+    entry.stimmen = opts.map(function(){return 0;});
+    entry.voted = false;
+    entry.farbe = '#3D2FAA';
+  } else {
+    var opts2 = Array.from(document.querySelectorAll('#sopts input')).map(function(i){return i.value.trim();}).filter(Boolean);
+    entry.body = document.getElementById('f-sbody').value.trim();
+    entry.optionen = opts2.map(function(l){return {label:l,namen:[]};});
+    entry.farbe = '#1A6B3C';
+  }
+  daten.unshift(entry);
+  closeNeu();
+  renderListe();
+  save();
+}
+
+function openVote(id) {
+  var e = daten.find(function(x){return x.id===id;});
+  if (!e || e.voted) return;
+  document.getElementById('vtit').textContent = e.title;
+  var h = '<p style="font-size:13px;color:var(--mut);margin-bottom:10px">' + (e.frage || 'Waehle eine Option:') + '</p>';
+  e.optionen.forEach(function(opt, i) {
+    h += '<button onclick="castVote(' + id + ',' + i + ')" style="display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:7px;border:1px solid var(--bdr);border-radius:var(--rs);background:transparent;font-size:13px;font-family:\'DM Sans\',sans-serif;color:var(--txt);cursor:pointer">' + opt + '</button>';
+  });
+  document.getElementById('vbody').innerHTML = h;
+  document.getElementById('ov-vote').classList.add('on');
+}
+function closeVote() { document.getElementById('ov-vote').classList.remove('on'); }
+function castVote(id, i) {
+  var e = daten.find(function(x){return x.id===id;});
+  if (!e) return;
+  e.stimmen[i]++;
+  e.voted = true;
+  closeVote();
+  renderListe();
+  save();
+}
+
+function openJoin(id) {
+  var e = daten.find(function(x){return x.id===id;});
+  if (!e) return;
+  joinId = id;
+  document.getElementById('jtit').textContent = e.title;
+  renderJoin(id);
+  document.getElementById('ov-join').classList.add('on');
+}
+function renderJoin(id) {
+  var e = daten.find(function(x){return x.id===id;});
+  var h = '';
+  e.optionen.forEach(function(opt, oi) {
+    h += '<div class="jopt"><span class="jolbl">' + opt.label + '</span>';
+    h += '<span class="jonam">' + (opt.namen.length ? opt.namen.join(', ') : 'noch niemand') + '</span>';
+    h += '<button class="jibtn" onclick="quickJoin(' + id + ',' + oi + ')">+ Ich</button></div>';
+  });
+  h += '<button class="daopt" onclick="openAddOpt(' + id + ')">+ Neue Option vorschlagen</button>';
+  document.getElementById('jbody').innerHTML = h;
+}
+function closeJoin() { document.getElementById('ov-join').classList.remove('on'); joinId = null; }
+
+function quickJoin(id, oi) {
+  var name = prompt('Dein Name:','');
+  if (!name || !name.trim()) return;
+  var e = daten.find(function(x){return x.id===id;});
+  if (e && e.optionen[oi].namen.indexOf(name.trim()) === -1) {
+    e.optionen[oi].namen.push(name.trim());
+  }
+  renderJoin(id);
+  renderListe();
+  save();
+}
+
+function openAddOpt(id) {
+  addOptId = id;
+  document.getElementById('ao-lbl').value = '';
+  document.getElementById('ao-nam').value = '';
+  document.getElementById('ov-join').classList.remove('on');
+  document.getElementById('ov-addopt').classList.add('on');
+}
+function closeAddOpt() {
+  document.getElementById('ov-addopt').classList.remove('on');
+  if (joinId) document.getElementById('ov-join').classList.add('on');
+}
+function confirmAddOpt() {
+  var lbl = document.getElementById('ao-lbl').value.trim();
+  var nam = document.getElementById('ao-nam').value.trim();
+  if (!lbl) return;
+  var e = daten.find(function(x){return x.id===addOptId;});
+  if (e) e.optionen.push({label:lbl, namen: nam ? [nam] : []});
+  closeAddOpt();
+  if (joinId) renderJoin(joinId);
+  renderListe();
+  save();
+}
+
+function showTab(tab) {
+  ['brett','fotos'].forEach(function(t) {
+    document.getElementById('nt-' + t).classList.toggle('on', t === tab);
+    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
+  });
+  if (tab === 'fotos') renderFgrid();
+}
+
+
+
+function renderSlide() {
+  var box = document.getElementById('sbox');
+  var dots = document.getElementById('sdots');
+  box.innerHTML = '';
+  dots.innerHTML = '';
+  fotos.forEach(function(f, i) {
+    var s = document.createElement('div');
+    s.className = 'slide' + (i===si ? ' on' : '');
+    if (f.src) {
+      s.innerHTML = '<img src="' + f.src + '" alt="' + f.cap + '">';
+    } else {
+      s.innerHTML = '<div class="slide-ph" style="background:' + (f.bg||'#1a1916') + '"><div class="slide-ph-ic">' + (i+1) + '</div><span>' + f.cap + '</span></div>';
+    }
+    box.appendChild(s);
+    var d = document.createElement('div');
+    d.className = 'dot' + (i===si ? ' on' : '');
+    d.onclick = function(){goSlide(i);};
+    dots.appendChild(d);
+  });
+  updateSlide();
+}
+function updateSlide() {
+  if (!fotos.length) return;
+  var f = fotos[si];
+  document.getElementById('scap').textContent = f.cap;
+  document.getElementById('ssub').textContent = f.sub || '';
+  document.getElementById('scnt').textContent = (si+1) + ' / ' + fotos.length;
+  document.querySelectorAll('.dot').forEach(function(d,i){d.classList.toggle('on',i===si);});
+  document.querySelectorAll('.slide').forEach(function(s,i){s.classList.toggle('on',i===si);});
+}
+function goSlide(i) {
+  si = (i + fotos.length) % fotos.length;
+  updateSlide();
+  if (stimer) clearInterval(stimer);
+  stimer = setInterval(function(){goSlide(si+1);}, 6000);
+}
+function nextSlide() { goSlide(si+1); }
+function prevSlide() { goSlide(si-1); }
+
+function renderFgrid() {
+  var g = document.getElementById('fgrid');
+  g.innerHTML = '';
+  fotos.forEach(function(f, i) {
+    var d = document.createElement('div');
+    d.className = 'fitem';
+    d.onclick = function(){goSlide(i); showTab('brett'); window.scrollTo({top:0,behavior:'smooth'});};
+    if (f.src) {
+      d.innerHTML = '<img src="' + f.src + '"><div class="fcap">' + (f.sub||f.cap) + '</div>';
+    } else {
+      d.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:' + (f.bg||'#1a1916') + ';color:rgba(255,255,255,.3);font-size:11px"><span style="font-size:20px">' + (i+1) + '</span><span>' + f.cap + '</span></div><div class="fcap">' + (f.sub||'') + '</div>';
+    }
+    var del = document.createElement('button');
+    del.className = 'fdel';
+    del.textContent = 'x';
+    del.onclick = function(ev){ev.stopPropagation(); if(confirm('Foto entfernen?')){fotos.splice(i,1); if(si>=fotos.length)si=Math.max(0,fotos.length-1); renderSlide(); renderFgrid();}};
+    d.appendChild(del);
+    g.appendChild(d);
+  });
+}
+
+function openUpload() {
+  uqueue = [];
+  document.getElementById('uprev').innerHTML = '';
+  document.getElementById('ucap').value = '';
+  document.getElementById('ov-upload').classList.add('on');
+}
+function closeUpload() { document.getElementById('ov-upload').classList.remove('on'); uqueue = []; }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('udrop').style.borderColor = '';
+  handleFiles(e.dataTransfer.files);
+}
+function handleFiles(files) {
+  Array.from(files).forEach(function(file) {
+    if (!file.type.startsWith('image/')) return;
+    var r = new FileReader();
+    r.onload = function(ev) {
+      uqueue.push({dataUrl: ev.target.result, name: file.name});
+      renderUprev();
+    };
+    r.readAsDataURL(file);
+  });
+}
+function renderUprev() {
+  var g = document.getElementById('uprev');
+  g.innerHTML = '';
+  uqueue.forEach(function(f, i) {
+    var d = document.createElement('div');
+    d.className = 'pitem';
+    d.innerHTML = '<img src="' + f.dataUrl + '"><button class="pdel" onclick="uqueue.splice(' + i + ',1);renderUprev()">x</button>';
+    g.appendChild(d);
+  });
+}
+function confirmUpload() {
+  var cap = document.getElementById('ucap').value.trim() || 'Teamfoto';
+  var sub = new Date().toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  uqueue.forEach(function(f) {
+    fotos.unshift({src: f.dataUrl, cap: cap, sub: sub, bg: '#1a1916'});
+  });
+  si = 0;
+  renderSlide();
+  renderFgrid();
+  closeUpload();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.querySelectorAll('.ov').forEach(function(ov) {
+  ov.addEventListener('click', function(e) { if (e.target === ov) ov.classList.remove('on'); });
+});
+
+renderSlide();
+ladeFotos();
+ladeDaten();
+</script>
+</body>
+</html>
